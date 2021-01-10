@@ -18,7 +18,7 @@ class Relationships():
 
     def new_func(self):
         print('begin chap3')
-        print(self.chap2_dist.gss.head())
+        print(self.chap2_dist.gss.head(10))
 
 
 
