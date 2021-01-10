@@ -2,3 +2,4 @@
 exploratory_data_analysis_in_python/.ipynb_checkpoints/exploratory_data_analysis_python_chapter 1-checkpoint.ipynb
 exploratory_data_analysis_in_python/.vscode/settings.json
 introduction_to_NLP_in_python/.vscode/settings.json
+*.pyc
