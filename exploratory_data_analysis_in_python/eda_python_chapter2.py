@@ -68,7 +68,7 @@ class Distributions():
         # check age PMF
         pmf_age = Pmf.from_seq(age, normalize = True)
         # plot age pmf
-        self.pdf_plot(pmf_age,'Age','Age','PMF')
+        self.pmf_plot(pmf_age,'Age','Age','PMF')
 
         # check age CDF
         cdf_age = Cdf.from_seq(age)
@@ -105,8 +105,8 @@ class Distributions():
         plt.ylabel(y_label)
         plt.show()
 
-    def pdf_plot(self, pmf_data,pmf_label, x_label, y_label): 
-        # pdf plot as bar chart
+    def pmf_plot(self, pmf_data,pmf_label, x_label, y_label): 
+        # pmf plot as bar chart
         pmf_data.bar(label = pmf_label)
         plt.xlabel(x_label)
         plt.ylabel(y_label)
