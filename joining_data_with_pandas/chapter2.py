@@ -1,7 +1,8 @@
 ''' Take your knowledge of joins to the next level. In this chapter, you’ll work with TMDb movie data 
 as you learn about left, right, and outer joins. 
 You’ll also discover how to merge a table to itself and merge on a DataFrame index　'''
-import pandas as pd 
+import pandas as pd
+import numpy as np
 
 class Joining():
     ''' Class allow to using different data joining techniques of pandas'''
@@ -10,6 +11,15 @@ class Joining():
         # the following datafram has no data to load
         self.movies = pd.DataFrame()
         self.financials = pd.DataFrame()
+
+        # create tmdb_movies.csv with shape(4083,4)
+        self.movies_table = self.df_movies[['id', 'original_title', 'popularity', 'release_date']][:4084]    
+        self.movies_table.to_csv('tmdb_movies.csv')
+
+        # create tmdb_movie_to_genres.csv
+        self.tmdb_5000_movies = pd.read_csv('archive/tmdb_5000_movies.csv')
+        self.movie_to_genres = self.tmdb_5000_movies[['movie_id', 'genre']]
+        self.movie_to_genres.to_csv('tmdb_movie_to_genres.csv')
 
 
     def left_joint(self, df_a, df_b, on_col):
@@ -31,9 +41,29 @@ class Joining():
         # Print the number of movies missing financials
         print(number_of_missing_fin)
     
+    def create_tagline(self, df, arr):
+        """ create tmdb_taglines.csv datset for joining practice 
+            shape (3955,3)
+        """
+        taglines = df[arr][:3956]
+        taglines.to_csv('tmdb_taglines.csv')
 
+        return taglines
+    
+    def other_join(self, movie_to_genres):
 
+        tv_genre = movie_to_genres[movie_to_genres['genre'] == 'TV Movie']
+        print(tv_genre.head(10))
+
+        return tv_genre
+
+# def __main__(self):
 chap2 = Joining('tmdb-movies.csv')
+# print(chap2.movies_table.head())
+# print(chap2.movies_table.shape)
 
-print(chap2.df_movies.head())
-print(chap2.df_movies.shape)
+taglines = chap2.create_tagline(chap2.df_movies, ['id','tagline'])
+# print(taglines.head())
+# print(taglines.shape)
+
+tv_genre = chap2.other_join(chap2.movie_to_genres)
