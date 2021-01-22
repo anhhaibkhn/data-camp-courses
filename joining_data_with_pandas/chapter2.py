@@ -56,6 +56,77 @@ class Joining():
         print(tv_genre.head(10))
 
         return tv_genre
+    
+    def inner_joine_for_sequels(self):
+        ''' This function summarize the exercise 'Do sequels earn more?'
+        it returns nothing, currently the data for function was not loaded 
+        '''
+        # empty frame. Data is not loaded 
+        sequels, financials = pd.DataFrame(), pd.DataFrame()
+
+        # Merge sequels and financials on index id
+        sequels_fin = sequels.merge(financials, on='id', how='left')
+
+        print(sequels.head(3), '\n', sequels.shape)
+        print(financials.head(3), '\n', financials.shape)
+        print(sequels_fin.head(3), '\n', sequels_fin.shape)
+
+        # Self merge with suffixes as inner join with left on sequel and right on id
+        orig_seq = sequels_fin.merge(sequels_fin, how='inner', left_on='sequel', 
+                                    right_on='id', right_index=True,
+                                    suffixes=('_org','_seq'))
+
+        # Add calculation to subtract revenue_org from revenue_seq 
+        orig_seq['diff'] = orig_seq['revenue_seq'] - orig_seq['revenue_org']
+        print(orig_seq.head(3), '\n', orig_seq.shape)
+
+
+        # Select the title_org, title_seq, and diff 
+        titles_diff = orig_seq[['title_org','title_seq','diff']]
+
+        # Print the first rows of the sorted titles_diff
+        print(titles_diff.sort_values(by='diff', ascending=False ).head())
+
+        '''
+            <script.py> output:
+                    title sequel
+        id                       
+        19995       Avatar    nan
+        862      Toy Story    863
+        863    Toy Story 2  10193 
+        
+        (4803, 2)
+                budget       revenue
+        id                             
+        19995   237000000  2.787965e+09
+        285     300000000  9.610000e+08
+        206647  245000000  8.806746e+08 
+        (3229, 2)
+
+                    title sequel       budget       revenue
+        id                                                  
+        19995       Avatar    nan  237000000.0  2.787965e+09
+        862      Toy Story    863   30000000.0  3.735540e+08
+        863    Toy Story 2  10193   90000000.0  4.973669e+08 
+        (4803, 4)
+
+            sequel                                  title_org sequel_org   budget_org  revenue_org                               title_seq sequel_seq   budget_seq   revenue_seq         diff
+        id                                                                                                                                                                                   
+        862    863                                  Toy Story        863   30000000.0  373554033.0                             Toy Story 2      10193   90000000.0  4.973669e+08  123812836.0
+        863  10193                                Toy Story 2      10193   90000000.0  497366869.0                             Toy Story 3        nan  200000000.0  1.066970e+09  569602834.0
+        675    767  Harry Potter and the Order of the Phoenix        767  150000000.0  938212738.0  Harry Potter and the Half-Blood Prince        nan  250000000.0  9.339592e+08   -4253541.0 
+        (90, 10)
+
+                    title_org        title_seq          diff
+        id                                                     
+        331    Jurassic Park III   Jurassic World  1.144748e+09
+        272        Batman Begins  The Dark Knight  6.303398e+08
+        10138         Iron Man 2       Iron Man 3  5.915067e+08
+        863          Toy Story 2      Toy Story 3  5.696028e+08
+        10764  Quantum of Solace          Skyfall  5.224703e+08
+        '''
+
+
 
 # def __main__(self):
 chap2 = Joining('tmdb-movies.csv')
