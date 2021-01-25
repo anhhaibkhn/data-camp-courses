@@ -5,3 +5,9 @@ introduction_to_NLP_in_python/.vscode/settings.json
 *.pyc
 joining_data_with_pandas/.vscode/settings.json
 joining_data_with_pandas/archive.zip
+joining_data_with_pandas/music_data_csv/data.csv
+joining_data_with_pandas/music_data_csv/data_by_artist.csv
+joining_data_with_pandas/music_data_csv/data_by_genres.csv
+joining_data_with_pandas/music_data_csv/data_by_year.csv
+joining_data_with_pandas/music_data_csv/data_w_genres.csv
+joining_data_with_pandas/archive/

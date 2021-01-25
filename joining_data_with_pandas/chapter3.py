@@ -8,6 +8,7 @@ you’ll also learn how to validate your newly combined data structures.
 '''
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Advance_Merge_Concatenate():
     ''' Class allow to using different data joining techniques of pandas'''
