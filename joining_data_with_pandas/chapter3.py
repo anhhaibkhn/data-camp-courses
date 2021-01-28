@@ -198,11 +198,62 @@ class Advance_Merge_Concatenate():
             1886 Invisible Kid                   1
         '''
 
+        def concatenate_merge_to_find_common_songs(self, classic_18, classic_19, pop_18, pop_19):
+            ''' oncatenate the respective files to make a large classical playlist table and overall popular music table. 
+            Then filter the classical music table using a semi-join to return only the most popular classical music tracks.'''
 
+            # Concatenate the classic tables vertically
+            classic_18_19 = pd.concat([classic_18, classic_19], ignore_index=True)
+            print(classic_18_19.head(3), classic_18_19.shape)
+            # Concatenate the pop tables vertically
+            pop_18_19 = pd.concat([pop_18, pop_19], ignore_index=True)
+            print(pop_18_19.head(3), pop_18_19.shape)
 
+            '''<script.py> output:
+            pid   tid
+            0   12  3483
+            1   12  3416
+            2   12  3489 (52, 2)
+            pid   tid
+            0    1  3063
+            1    1  2712
+            2    1  2641 (376, 2)
+            '''
+            # Merge classic_18_19 with pop_18_19
+            classic_pop = classic_18_19.merge(pop_18_19, how='inner', on='tid')
 
+            # Using .isin(), filter classic_18_19 rows where tid is in classic_pop
+            popular_classic = classic_18_19[classic_18_19['tid'].isin(classic_pop['tid'])]
+            print(classic_18_19['tid'].isin(classic_pop['tid']))
+            '''
+            0     False
+            1     False
+            2     False
+            3      True
+            4     False
+            5     False
+               .....
+            45    False
+            46    False
+            47    False
+            48     True
+            49    False
+            50     True
+            51    False
+            Name: tid, dtype: bool
+            '''
 
-
+            # Print popular chart
+            print(popular_classic.head(10))
+            '''
+                pid   tid
+            3    12  3479
+            10   12  3439
+            21   12  3445
+            23   12  3449
+            48   12  3437
+            50   12  3435
+            '''
 
 
 
