@@ -64,6 +64,29 @@ class Decorators():
         subtract = create_math_function('subtract')
         print('5 - 2 = {}'.format(subtract(5, 2)))
 
+    def exercise_3(self, load_and_plot_data):
+        """ review your co-worker's code """
+
+        def has_docstring(func):
+            """Check to see if the function 
+            `func` has a docstring.
+
+            Args:
+                func (callable): A function.
+
+            Returns:
+                bool
+            """
+            return func.__doc__ is not None
+        
+        # Call has_docstring() on the load_and_plot_data() function
+        ok = has_docstring(load_and_plot_data)
+
+        if not ok:
+            print("load_and_plot_data() doesn't have a docstring!")
+        else:
+            print("load_and_plot_data() looks ok")
+
         
     
 
