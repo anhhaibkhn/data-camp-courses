@@ -1,10 +1,12 @@
-""" Chapter 3: More on Decorators
-Now that you understand how decorators work under the hood, this chapter gives you 
-a bunch of real-world examples of when and how you would write decorators in your own code. 
-You will also learn advanced decorator concepts like how to preserve the metadata of
-your decorated functions and how to write decorators that take arguments."""
+""" Chapter 3:Decorators
+Decorators are an extremely powerful concept in Python. They allow you to modify the behavior 
+of a function without changing the code of the function itself. This chapter will lay the foundational concepts 
+needed to thoroughly understand decorators (functions as objects, scope, and closures), 
+and give you a good introduction into how decorators are used and defined. 
+This deep dive into Python internals will set you up to be a superstar Pythonista.
+"""
 
-import time, os
+import time, os, random
 
 class Decorators():
 
@@ -87,16 +89,92 @@ class Decorators():
         else:
             print("load_and_plot_data() looks ok")
 
-        
-    
+    def exercise_4(self):
+        """ Modifying variables outside local scope """
+        # instruction 1: add keyword to update call_count from inside the function 
+        call_count = 0
 
+        def my_function():
+            # Use a keyword that lets us update call_count (ans: global)
+            global call_count
+            call_count += 1
+            
+            print("You've called my_function() {} times!".format(
+                call_count
+            ))
+        
+        for _ in range(20):
+            my_function()
+        
+        # instruction 2: Add a keyword that lets us modify file_contents from inside save_contents().
+        def read_files():
+            file_contents = None
+            
+            def save_contents(filename):
+                # Add a keyword that lets us modify file_contents (ans: nonlocal)
+                nonlocal file_contents
+                if file_contents is None:
+                    file_contents = []
+                with open(filename) as fin:
+                    file_contents.append(fin.read())
+                
+            for filename in ['1984.txt', 'MobyDick.txt', 'CatsEye.txt']:
+                save_contents(filename)
+                
+            return file_contents
+
+        print('\n'.join(read_files()))
+    
+        # instruction 3: Add a keyword to done in check_is_done() so that wait_until_done() eventually stops looping.
+        def wait_until_done():
+            def check_is_done():
+                # Add a keyword so that wait_until_done()  (ans: global done)
+                # doesn't run forever
+                global done
+                if random.random() < 0.1:
+                    done = True
+                
+            while not done:
+                check_is_done()
+
+            done = False
+            wait_until_done()
+
+            print('Work done? {}'.format(done))
+        
+
+    def exercise_5(self):
+        """ Checking for closure """
+        # 1 Use an attribute of the my_func() function to show that it has a closure that is not None
+        def return_a_func(arg1, arg2):
+            def new_func():
+                print('arg1 was {}'.format(arg1))
+                print('arg2 was {}'.format(arg2))
+            return new_func
+                
+        my_func = return_a_func(2, 17)
+
+        # Show that my_func()'s closure is not None
+        print(my_func.__closure__ is not None)
+        # Show that there are two variables in the closure
+        print(len(my_func.__closure__) == 2)
+
+        # Get the values of the variables in the closure
+        closure_values = [
+        my_func.__closure__[i].cell_contents for i in range(2)
+        ]
+        print(closure_values == [2, 17])
+
+    def excercise_6(self):
+        
+            
 
 
 
 
 def main():
     chap3 = Decorators()
-    chap3.exercise_1()
+    chap3.exercise_5()
 
 
 if __name__ == "__main__":
