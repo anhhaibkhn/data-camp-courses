@@ -20,6 +20,7 @@ class Seaborn_Visualize_two_vars():
 
     def __init__(self):
         self.chap1 = Seaborn_Intro()
+        self.mpg = pd.read_csv("mpg.csv")
 
     def exercise_1(self):
         """ Creating subplots with col and row """
@@ -53,14 +54,68 @@ class Seaborn_Visualize_two_vars():
         # Show plot
         plt.show()
 
+    def exercise_3_1(self):
+        """ customizing scatter plots 
+            Changing the size of scatter plot points """
+
+        mpg = self.mpg
+
+        # Create scatter plot of horsepower vs. mpg
+        sns.relplot(x="horsepower", y="mpg", 
+                    data=mpg, kind="scatter", 
+                    size="cylinders", 
+                    hue="cylinders")
+        # Show plot
+        plt.show()
+
+    def exercise_3_2(self):
+        """ customizing scatter plots 
+           Changing the style of scatter plot points """
+
+        mpg = self.mpg
+
+        # Create a scatter plot of acceleration vs. mpg
+        # Vary the style and color of the plot points by country of origin
+        sns.relplot(x="acceleration", y="mpg", 
+                            data=mpg, kind="scatter", 
+                            style="origin", 
+                            hue="origin")
+        # Show plot
+        plt.show()
+
+    def exercise_4(self):
+        """" Line plots for time series
+              Interpreting line plots  """
+        mpg = self.mpg    
+        # Make the shaded area show the standard deviation
+        sns.relplot(x="model_year", y="mpg",
+                    data=mpg, kind="line", ci = "sd")
+
+        # Show plot
+        plt.show()
+    
+    def exercise_5(self):
+        """ Line plots for time series
+            Plotting subgroups in line plots """
+        mpg = self.mpg   
+        # Add markers and make each line have the same style
+        sns.relplot(x="model_year", y="horsepower", 
+                    data=mpg, kind="line", 
+                    ci=None, style="origin", 
+                    hue="origin", markers=True,
+                    dashes=False)
+
+        # Show plot
+        plt.show()
+
 
 
 
 def main():
     chap2 = Seaborn_Visualize_two_vars()
     # chap2.exercise_1()
-    chap2.exercise_2()
-    # chap2.exercise_3()
+    # chap2.exercise_2()
+    chap2.exercise_3_2()
     # chap2.exercise_4()
     # chap2.exercise_5()
 
