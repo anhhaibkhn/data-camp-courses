@@ -165,7 +165,7 @@ class Decorators():
         ]
         print(closure_values == [2, 17])
 
-    def excercise_6(self):
+    # def excercise_6(self):
         
             
 
