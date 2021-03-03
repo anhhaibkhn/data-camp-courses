@@ -96,35 +96,122 @@ class Seaborn_Categorical():
         # Show plot
         plt.show()
     
-    def exercise_3(self):
-        """ Create Box plots """
+    def exercise_4_1(self):
+        """ Create and interpret Box plots """
         student_data = self.chap1.student_data
-        # Create bar plot of average final grade in each study category
-        # # Rearrange the categories in order
-        # Turn off the confidence intervals
-        sns.catplot(x="study_time", y="G3",
-                    data=student_data,
-                    kind="bar",
-                    order=["<2 hours", 
-                        "2 to 5 hours", 
-                        "5 to 10 hours", 
-                        ">10 hours"],
-                    ci=None)
+        # Specify the category ordering
+        study_time_order = ["<2 hours", "2 to 5 hours", 
+                            "5 to 10 hours", ">10 hours"]
+
+        # Create a box plot and set the order of the categories
+        sns.catplot(x="study_time", y="G3", data= student_data,
+                                    order= study_time_order,
+                                    kind = "box")
 
         # Show plot
         plt.show()
+
+    def exercise_4_2(self):
+        """ Create and Omitting outliers Box plots """
+        student_data = self.chap1.student_data
+        
+
+        # Create a box plot with subgroups and omit the outliers
+        sns.catplot(x="internet", y="G3", data= student_data,
+                                            hue="location",
+                                            kind = "box",
+                                            sym = "")
+
+        # Show plot
+        plt.show()
+
+        """ Success! The median grades are quite similar between each group, 
+        but the spread of the distribution looks larger among students who have internet access."""
+
+    def exercise_5_1(self):
+        """ Adjusting the whiskers Box plots """
+        student_data = self.chap1.student_data
+        # Set the whiskers to 0.5 * IQR
+        sns.catplot(x="romantic", y="G3",
+                    data=student_data,
+                    whis=0.5,
+                    kind="box")
+
+        # Show plot
+        plt.show()  
     
+    def exercise_5_2(self):
+        """ Adjusting the whiskers Box plots """
+        student_data = self.chap1.student_data
+        # Extend the whiskers to the 5th and 95th percentile
+        sns.catplot(x="romantic", y="G3",
+                    data=student_data,
+                    kind="box",
+                    whis=[5,95])
 
+        # Show plot
+        plt.show()
 
+    def exercise_5_3(self):
+        """ Adjusting the whiskers Box plots
+        The median grade is the same between these two groups, 
+        but the max grade is higher among students who are not in a romantic relationship. """
 
+        student_data = self.chap1.student_data
+        # Extend the whiskers to the 5th and 95th percentile
+        sns.catplot(x="romantic", y="G3",
+                    data=student_data,
+                    kind="box",
+                    whis=[0, 100])
+
+        # Show plot
+        plt.show()
+
+    def exercise_6_1(self):
+        """ Customizing point plots"""
+
+        student_data = self.chap1.student_data
+        # Create a point plot of family relationship vs. absences
+        # Add caps to the confidence interval (szoe 0.2)
+        # Remove the lines joining the points join=False
+        sns.catplot(x="famrel", y="absences",
+                    data=student_data,
+                    kind="point",
+                    capsize=0.2,
+                    join=False)
+        
+      
+        # Show plot
+        plt.show()
+
+    def exercise_6_2(self):
+        """ Point plots with subgroupss"""
+        student_data = self.chap1.student_data
+
+        # Import median function from numpy
+        from numpy import median
+
+        # Plot the median number of absences instead of the mean
+        # Turn off the confidence intervals for this plot
+        sns.catplot(x="romantic", y="absences",
+                    data=student_data,
+                    kind="point",
+                    hue="school",
+                    ci=None,
+                    estimator=median)
+
+      
+        # Show plot
+        plt.show()
 
 def main():
     chap2 = Seaborn_Categorical()
     # chap2.exercise_1()
     # chap2.exercise_2()
-    chap2.exercise_3()
-    # chap2.exercise_4()
-    # chap2.exercise_5()
+    # chap2.exercise_4_1()
+    # chap2.exercise_4_2()
+    # chap2.exercise_5_3()
+    # chap2.exercise_6()
 
 
 if __name__ == "__main__":
