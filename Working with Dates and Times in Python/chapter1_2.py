@@ -13,12 +13,12 @@ import numpy as np
 class Date_Calendars():
 
     def __init__(self):
-        self.show_data = True
+        self.show_data = False
         self.bike_data_df = pd.read_csv("capital-onebike.csv")
         self.bike_data_df = self.summary_df(self.bike_data_df, self.show_data )
 
         self.florida_hurricane = pd.read_pickle("florida_hurricane_dates.pkl")
-        print(type(self.florida_hurricane), self.florida_hurricane[:5])
+        # print(type(self.florida_hurricane), self.florida_hurricane[:5])
 
     def summary_df(self,df, show = False):
         df.dropna(how='all')
@@ -78,11 +78,11 @@ class Combine_date_time(Date_Calendars):
         self.onebike_datetimes = []
         start_list = self.bike_data_df['Start date'].to_list()
         end_list =  self.bike_data_df['End date'].to_list()
-        print(start_list[:2])
+        # print(start_list[:2])
         for s,e in zip(start_list, end_list):
              self.onebike_datetimes.append({'start': datetime.strptime(s,"%Y-%m-%d %H:%M:%S"), \
                                               'end': datetime.strptime(e,"%Y-%m-%d %H:%M:%S")})
-        print(self.onebike_datetimes[:2])
+        # print(self.onebike_datetimes[:2])
 
 
     def exercise_1(self, onebike_datetimes):
