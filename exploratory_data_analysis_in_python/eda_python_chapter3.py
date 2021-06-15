@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from empiricaldist import Pmf
 import seaborn as sns
+import tables 
 
 
 class Relationships():
@@ -25,7 +26,9 @@ class Relationships():
         # initialize the Distribution object
         # self.chap2_dist = Distributions()
         # initialize dataset for chapter 3
+
         self.brfss = pd.read_hdf('brfss.hdf5','brfss')
+        
         self.height = self.brfss['HTM4']
         self.weight = self.brfss['WTKG3']
         self.age = self.brfss['AGE']
@@ -143,36 +146,42 @@ class Relationships():
 
     def test(self):
         # do stuff
+        print('stuff')
 
 
 
 
+def main():
+    # main
+    chap3 = Relationships()
+
+    ## Exploring relationships
+    # chap3.explore_relationships()
+
+    ## PMF of Age
+    # chap3.pmf_age()
+
+    ## scatter plot of first 1000 rows for weight vs age, then add jittering
+    # chap3.scatter_plot_weight_age()
+
+    ## Violin plot to show pdf relations for each column
+    # chap3.violin_plot()
+
+    ## Box plot
+    # chap3.box_plot()
+
+    ## height and weight
+    # chap3.height_weight()
+
+    ## Income and height 
+    # chap3.income_height()
+
+    ## Correlation
+
+    chap3.test()    
 
 
-# main
-chap3 = Relationships()
+if __name__ == "__main__":
+    main()
 
-## Exploring relationships
-# chap3.explore_relationships()
 
-## PMF of Age
-# chap3.pmf_age()
-
-## scatter plot of first 1000 rows for weight vs age, then add jittering
-# chap3.scatter_plot_weight_age()
-
-## Violin plot to show pdf relations for each column
-# chap3.violin_plot()
-
-## Box plot
-# chap3.box_plot()
-
-## height and weight
-# chap3.height_weight()
-
-## Income and height 
-# chap3.income_height()
-
-## Correlation
-
-chap3.test()
