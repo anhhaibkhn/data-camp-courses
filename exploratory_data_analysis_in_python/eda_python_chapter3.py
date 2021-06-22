@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from empiricaldist import Pmf
 import seaborn as sns
 import tables 
+from IPython.display import display
 
 
 class Relationships():
@@ -25,8 +26,8 @@ class Relationships():
     def __init__ (self):
         # initialize the Distribution object
         # self.chap2_dist = Distributions()
+        
         # initialize dataset for chapter 3
-
         self.brfss = pd.read_hdf('brfss.hdf5','brfss')
         
         self.height = self.brfss['HTM4']
@@ -52,7 +53,7 @@ class Relationships():
         
         # scatter plot
         plt.plot(self.height, self.weight, 'o')
-        self.plt_label(1, 'height in cm', 'weight in kg')
+        # self.plt_label(1, 'height in cm', 'weight in kg')
 
         # transparency 
         # plt.plot(self.height, self.weight, 'o', alpha = 0.02)
@@ -144,10 +145,46 @@ class Relationships():
         plt.ylabel('Height in cm')
         plt.show() 
 
-    def test(self):
-        # do stuff
-        print('stuff')
+    def correlation_example(self):
 
+        columns = ['HTM4', 'WTKG3', 'AGE']
+        subset = self.brfss[columns]
+        print(subset.corr())
+
+        # Select columns
+        columns2 = ['AGE', 'INCOME2','_VEGESU1']
+        subset = self.brfss[columns2]
+
+        # Compute the correlation matrix
+        print(subset.corr())
+    
+    def simple_regression(self, brfss):
+        from scipy.stats import linregress
+
+        # Extract the variables
+        subset = brfss.dropna(subset=['INCOME2', '_VEGESU1'])
+        xs = subset['INCOME2']
+        ys = subset['_VEGESU1']
+
+        # Compute the linear regression
+        res = linregress(xs, ys)
+        print(res)
+
+        # Fit a Line
+        # Plot the scatter plot
+        plt.clf()
+        x_jitter = xs + np.random.normal(0, 0.15, len(xs))
+        plt.plot(x_jitter, ys, 'o', alpha=0.2)
+
+        # Plot the line of best fit
+        fx = np.array([xs.min(), xs.max()])
+        fy = res.intercept + res.slope * fx
+        plt.plot(fx, fy, '-', alpha=0.7)
+
+        plt.xlabel('Income code')
+        plt.ylabel('Vegetable servings per day')
+        plt.ylim([0, 6])
+        plt.show()
 
 
 
@@ -177,8 +214,11 @@ def main():
     # chap3.income_height()
 
     ## Correlation
+    # chap3.correlation_example()
 
-    chap3.test()    
+    # regression 
+    chap3.simple_regression(chap3.brfss)
+   
 
 
 if __name__ == "__main__":
