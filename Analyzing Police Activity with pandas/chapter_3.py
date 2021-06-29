@@ -86,22 +86,6 @@ class Visual_EDA(Preparing_data):
         plt.show()
 
 
-""" Chapter 4: Analyzing the effect of weather on policing
-
-In this chapter, you will use a second dataset to explore the impact of weather conditions 
-on police behavior during traffic stops. You will practice merging and reshaping datasets, 
-assessing whether a data source is trustworthy, working with categorical data, and other advanced skills."""
-
-class Analyzing(Visual_EDA):
-
-    def __init__(self):
-        super().__init__()
-
-    def ex1(self, ri):
-        pass
-
-
-
 
 
 def main():
