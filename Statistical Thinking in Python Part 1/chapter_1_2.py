@@ -304,6 +304,129 @@ class Quantitative_EDA(Preparing_data):
         print(r)
         
 
+""" Chapter 3: Thinking Probabilistically -- Discrete Variables
+
+Statistical inference rests upon probability. Because we can very rarely say anything meaningful with absolute certainty 
+from data, we use probabilistic language to make quantitative statements about data. In this chapter, you will learn 
+how to think probabilistically about discrete quantities: those that can only take certain values, like integers."""
+
+class Probabilistic(Preparing_data):
+    def __init__(self):
+            super().__init__()
+
+    np.random.seed(42)
+    def Simulating_four_coint_flips(self, trial_number = 10000):
+        n_all_heads = 0     # Initialize number of 4-heads trials
+        for _ in range(trial_number):         
+            heads = np.random.random(size=4) < 0.5         
+            n_heads = np.sum(heads)
+
+            if n_heads == 4:
+                n_all_heads += 1
+
+        # result is 0.0621
+        return n_all_heads / trial_number
+
+    def Random_number(self, ):
+        # Seed the random number generator
+        np.random.seed(42)
+
+        # Initialize random numbers: random_numbers
+        random_numbers = np.empty(100000)
+
+        # Generate random numbers by looping over range(100000)
+        for i in range(100000):
+            random_numbers[i] = np.random.random()
+
+        # Plot a histogram
+        _ = plt.hist(random_numbers)
+
+        # Show the plot
+        plt.show()
+
+    def perform_bernoulli_trials(self, n, p):
+        """Perform n Bernoulli trials with success probability p
+        and return number of successes."""
+        # Initialize number of successes: n_success
+        n_success =  0
+
+        # Perform trials
+        for i in range(n):
+            # Choose random number between zero and one: random_number
+            random_number = np.random.random()
+
+            # If less than p, it's a success so add one to n_success
+            if random_number < p:
+                n_success +=1
+
+        return n_success
+
+    def exercise_plotting_hist(self, ):
+        # # Seed random number generator
+        # np.random.seed(42)
+
+        # Initialize the number of defaults: n_defaults
+        n_defaults = np.empty(1000)
+
+        # Compute the number of defaults
+        for i in range(1000):
+            n_defaults[i] = self.perform_bernoulli_trials(100, 0.05)
+
+        # Plot the histogram with default number of bins; label your axes
+        _ = plt.hist(n_defaults, normed=True)
+        _ = plt.xlabel('number of defaults out of 100 loans')
+        _ = plt.ylabel('probability')
+        # Show the plot
+        plt.show()
+
+
+        # Compute ECDF: x, y
+        x, y = self.ecdf(n_defaults)
+
+        # Plot the ECDF with labeled axes
+        _ = plt.plot(x,y, marker = '.', linestyle = 'none')
+
+        # Label the axes
+        _ = plt.ylabel('ECDF')
+        _ = plt.xlabel('n_defaults')
+        # Show the plot
+        plt.show()
+
+        # Compute the number of 100-loan simulations with 10 or more defaults: n_lose_money
+        n_lose_money = np.sum(n_defaults >= 10)
+
+        # Compute and print probability of losing money
+        print('Probability of losing money =', n_lose_money / len(n_defaults))    
+
+    
+    def Binominl_distribution(self, n_defaults):
+        # Take 10,000 samples out of the binomial distribution: n_defaults
+        n_defaults = np.random.binomial(100, 0.05, size=10000)
+
+        # Compute CDF: x, y
+        x, y = self.ecdf(n_defaults)
+
+        # Plot the CDF with axis labels
+        _ = plt.plot(x, y, marker='.', linestyle='none')
+        plt.margins(0.02)
+
+        _ = plt.xlabel('number of successes')
+        _ = plt.ylabel('CDF')
+
+        plt.show()
+
+    def Plotting_binomial_pmf(self,n_defaults):
+        # Compute bin edges: bins
+        bins = np.arange(-0.5 , max(n_defaults) + 1.5 - 0.5,1)
+        # Generate histogram
+        _ = plt.hist(n_defaults, normed=True, bins =bins)
+        _ = plt.xlabel('number of defaults out of 100 loans')
+        _ = plt.ylabel('probability')
+        # Show the plot
+        plt.show()
+
+        help(np.arange)
+
 
 
 
@@ -319,9 +442,13 @@ def main():
     #                         chap1.versicolor_petal_length,\
     #                         chap1.virginica_petal_length)
 
-    chap2 = Quantitative_EDA()
+    # chap2 = Quantitative_EDA()
     # chap2.Computing_percentiles(chap2.versicolor_petal_length)
-    chap2.create_boxplot(chap2.df)
+    # chap2.create_boxplot(chap2.df)
+
+    chap3 = Probabilistic()
+
+
 
 
 if __name__ == "__main__":
