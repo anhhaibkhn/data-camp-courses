@@ -57,8 +57,8 @@ class Preparing_data():
         self.setosa_petal_length    = self.df.loc[self.df['target'] == 0., 'petal length (cm)']
         self.virginica_petal_length = self.df.loc[self.df['target'] == 2., 'petal length (cm)']
 
-        # loeading df swing
-        self.df_swing = pd.read_csv('2008_swing_states.csv')
+        # loeading df swing using absolute folder 
+        self.df_swing = pd.read_csv('E:/data_science_resources/git_data_camp/data-camp-courses/Statistical Thinking in Python Part 1/2008_swing_states.csv')
 
 
     
@@ -134,6 +134,7 @@ class Preparing_data():
 
         plt.show()
 
+    @classmethod
     def ecdf(self, data):
         """Compute ECDF for a one-dimensional array of measurements."""
         # Number of data points: n
