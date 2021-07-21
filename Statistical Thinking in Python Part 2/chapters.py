@@ -22,6 +22,9 @@ those that best describe your data.
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
+import os
+
 
 import sys
 sys.path.insert(0, 'E:/data_science_resources/git_data_camp/data-camp-courses/Statistical Thinking in Python Part 1/')
@@ -288,7 +291,7 @@ class Bootstrap:
         """ Generating many bootstrap replicates """
 
         # Initialize array of replicates: bs_replicates
-        bs_replicates = np.empty(size = size)
+        bs_replicates = np.empty(size)
         # Generate replicates
         for i in range(size):
             bs_replicates[i] = self.bootstrap_replicate_1d(data, func)
@@ -410,10 +413,32 @@ They are the icing on the inference cake. After completing this chapter,
 you will be able to carefully construct and test hypotheses using hacker statistics.
 
 """
-class Hypothesis():
+class Hypothesis(Bootstrap):
     def __init__(self):
-        pass
+        super().__init__()
+        current_file = os.path.abspath(os.path.dirname(__file__))
+        #csv_filename
+        csv_filename = os.path.join(current_file, 'frog_tongue.csv')
+        self.frog_tongue = pd.read_csv(csv_filename,  skiprows= 14)
+        
+        self.frog_tongue.rename(columns={'ID': 'OLD_ID'}, inplace=True)
+        # Create the dictionary
+        ID_dict  ={'I' : 'C', 'II' : 'A', 'III' : 'D', 'IV': 'B'}   
+        # Add a new column named 'ID'
+        self.frog_tongue['ID'] = self.frog_tongue['OLD_ID'].map(ID_dict)
+        self.frog_tongue['impact_force'] = self.frog_tongue['impact force (mN)'] / 1000
 
+        # print(self.frog_tongue.head())
+        # print(self.frog_tongue.info())
+
+        options = ['A', 'B'] 
+        # selecting rows based on condition
+        self.frog_df = self.frog_tongue.loc[self.frog_tongue['ID'].isin(options), ['ID', 'impact_force']]
+        
+        # print('\nResult dataframe :\n', self.frog_df)
+        self.force_a = self.frog_df.loc[self.frog_df['ID'] == 'A', 'impact_force'].to_numpy().astype(np.float64)
+        self.force_b = self.frog_df.loc[self.frog_df['ID'] == 'B', 'impact_force'].to_numpy().astype(np.float64)
+ 
 
     def permutation_sample(self, data1, data2):
         """Generate a permutation sample from two data sets."""
@@ -459,6 +484,93 @@ class Hypothesis():
         _ = plt.ylabel('ECDF')
         plt.show()
 
+    def draw_perm_reps(self, data_1, data_2, func, size=1):
+        """Generate multiple permutation replicates."""
+
+        # Initialize array of replicates: perm_replicates
+        perm_replicates = np.empty(size)
+
+        for i in range(size):
+            # Generate permutation sample
+            perm_sample_1, perm_sample_2 = self.permutation_sample(data_1, data_2)
+
+            # Compute the test statistic
+            perm_replicates[i] = func(perm_sample_1, perm_sample_2)
+
+        return perm_replicates
+
+    def make_bee_swarm_plot(self, df):
+        """ Make bee swarm plot """
+        _ = sns.swarmplot('ID', y = 'impact_force', data=df)
+
+        # Label the axes
+        _ = plt.xlabel('frog')
+        _ = plt.ylabel('impact force (N)')
+
+        # Show the plot
+        plt.show()
+
+    
+    def permutation_test_on_frog_data(self,force_a, force_b):
+
+        def diff_of_means(data_1, data_2):
+            """Difference in means of two arrays."""
+            # The difference of means of data_1, data_2: diff
+            diff = np.mean(data_1) - np.mean(data_2)
+
+            return diff
+
+        # Compute difference of mean impact force from experiment: empirical_diff_means
+        empirical_diff_means = diff_of_means(force_a, force_b)
+
+        # Draw 10,000 permutation replicates: perm_replicates
+        perm_replicates = self.draw_perm_reps(force_a, force_b,
+                                        diff_of_means , size=10000)
+
+        # Compute p-value: p
+        p = np.sum(perm_replicates >= empirical_diff_means) / len(perm_replicates)
+
+        # Print the result
+        print('p-value =', p)
+
+    def one_sample_bootstrap_hypothesis_test(self, force_b):
+
+        # Make an array of translated impact forces: translated_force_b
+        translated_force_b = force_b - np.mean(force_b) + 0.55
+
+        # Take bootstrap replicates of Frog B's translated impact forces: bs_replicates
+        bs_replicates = self.draw_bs_reps(translated_force_b, np.mean, 10000)
+
+        # Compute fraction of replicates that are less than the observed Frog B force: p
+        p = np.sum(bs_replicates <= np.mean(force_b)) / 10000
+
+        # Print the p-value
+        print('p = ', p)
+
+    def two_sample_bootstrap_hypothesis_test(self, force_a, force_b, forces_concat, empirical_diff_means):
+        # Compute mean of all forces: mean_force
+        mean_force = np.mean(forces_concat)
+
+        # Generate shifted arrays
+        force_a_shifted = force_a - np.mean(force_a) + mean_force
+        force_b_shifted = force_b - np.mean(force_b) + mean_force 
+
+        # Compute 10,000 bootstrap replicates from shifted arrays
+        bs_replicates_a = self.draw_bs_reps(force_a_shifted, np.mean, 10000)
+        bs_replicates_b = self.draw_bs_reps(force_b_shifted, np.mean, 10000)
+
+        # Get replicates of difference of means: bs_replicates
+        bs_replicates = bs_replicates_a - bs_replicates_b
+
+        # Compute and print p-value: p
+        p = np.sum(bs_replicates >= empirical_diff_means ) / 10000
+        print('p-value =', p)
+
+
+
+
+
+
 
 
 
@@ -469,6 +581,12 @@ As you saw from the last chapter, hypothesis testing can be a bit tricky. You ne
 figure out how to simulate it, and define clearly what it means to be "more extreme" to compute the p-value. 
 Like any skill, practice makes perfect, and this chapter gives you some good practice with hypothesis tests.
 """
+
+
+
+
+
+
 
 
 """ Chapter 5: Putting it all together: a case study
@@ -487,7 +605,13 @@ def main():
     # chap1.test_ecdf_plot(samples_std1)
     # chap1.linear_regression(chap1.x, chap1.y)
     # chap1.linear_reg_on_Anscombe(chap1.anscombe_x, chap1.anscombe_y)
-    
+
+    chap3 = Hypothesis()
+    # chap3.make_bee_swarm_plot(chap3.frog_df)
+    # chap3.permutation_test_on_frog_data(chap3.force_a, chap3.force_b)
+    chap3.one_sample_bootstrap_hypothesis_test(chap3.force_b)
+
+
     
 
 
