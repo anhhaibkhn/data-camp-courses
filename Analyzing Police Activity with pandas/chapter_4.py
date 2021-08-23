@@ -143,7 +143,140 @@ class Analyzing_effect(Preparing_data):
         plt.show()
 
     def categorizing_weather(self, weather):
-        pass
+        # selecting dataframe slice 
+        temp = weather.loc[:, 'TAVG': 'TMAX']
+        print(temp.shape, '\n', temp.columns, '\n','######################')
+
+        # check dataframe operations
+        print(temp.head(), '\n', temp.sum(), '\n','#######################')
+
+        print(temp.sum(axis = 'columns'), '\n','#######################')
+    
+    def mapping_values(self, df):
+        ri = df.dropna()
+        # mapping one set of values to another 
+        print(ri.stop_duration.unique(), '\n','#######################', ri.stop_duration.shape)
+
+        # mapping dict
+        mapping = { '0-15 Min': 'short',\
+                    '16-30 Min': 'medium',\
+                    '30+ Min': 'long' }
+        # creating new column stop_length (string data) with mapping dict
+        ri["stop_length"] = ri['stop_duration'].map(mapping)
+        print(ri.stop_length.unique(), '\n','#######################')
+        
+        #change it to category type, for more efficiently storing the data
+        print(ri.stop_length.memory_usage(deep = True), '\n','#######################')
+
+        cats = ['short', 'medium', 'long']
+        # ri['stop_length'] = ri.stop_length.astype('category', categories = cats)
+        ri['stop_length'] = pd.Categorical( ri.stop_length, categories=cats, ordered=True)
+        print('### after changing to category type')
+        print(ri.stop_length.memory_usage(deep = True), '\n','#######################')
+        print(ri.stop_length.head())
+
+        # using the ordered categories
+        print(ri[ri.stop_length > 'short'].shape)
+
+    def counting_values(self, weather):
+        # Copy 'WT01' through 'WT22' to a new DataFrame
+        WT = weather.loc[:,'WT01':'WT22']
+
+        weather.head()
+
+        # Calculate the sum of each row in 'WT'
+        weather['bad_conditions'] = WT.sum(axis = 'columns')
+
+        # Replace missing values in 'bad_conditions' with '0'
+        weather['bad_conditions'] = weather.bad_conditions.fillna(0).astype('int')
+
+        # Create a histogram to visualize 'bad_conditions'
+        weather['bad_conditions'].plot(kind = 'hist')
+        # Display the plot
+        plt.show()
+
+        # plotting_bad_conditions_weathe
+        # Count the unique values in 'bad_conditions' and sort the index
+        print(weather.bad_conditions.value_counts().sort_index())
+
+        # Create a dictionary that maps integers to strings
+        # creating dic that contains multiple key having same value
+        mapping = {0:'good', 1:'bad', 2:'bad', **dict.fromkeys([3,4], 'bad'), \
+                                             **dict.fromkeys([5,6,7,8,9], 'worse')}
+
+        # Convert the 'bad_conditions' integers to strings using the 'mapping'
+        weather['rating'] = weather.bad_conditions.map(mapping)
+
+        # Count the unique values in 'rating'
+        print(weather.rating.value_counts())
+
+        # Create a list of weather ratings in logical order
+        cats = ['good', 'bad', 'worse']
+
+        # Change the data type of 'rating' to category
+        # weather['rating'] = weather.rating.astype('category', ordered=True, categories = cats)
+        weather['rating'] = pd.Categorical( weather.rating, categories=cats, ordered=True)
+
+        # Examine the head of 'rating'
+        print(weather.rating.head())
+        return weather
+
+    def merge_df(self, ri, weather):
+
+        # Reset the index of 'ri'
+        ri.reset_index(inplace=True)
+
+        # Examine the head of 'ri'
+        print(ri.head())
+
+        # Create a DataFrame from the 'DATE' and 'rating' columns
+        weather_rating = weather[['DATE', 'rating']]
+
+        # Examine the head of 'weather_rating'
+        print(weather_rating.head())
+
+        # Examine the shape of 'ri'
+        print(ri.shape)
+
+        # Merge 'ri' and 'weather_rating' using a left join
+        ri_weather = pd.merge(left=ri, right=weather_rating, left_on='stop_date', right_on='DATE', how='left')
+
+        # Examine the shape of 'ri_weather'
+        print(ri_weather.shape)
+
+        # Set 'stop_datetime' as the index of 'ri_weather'
+        ri_weather.set_index('stop_datetime', inplace=True)
+
+        return ri_weather
+
+    def comparing_arrest_rate(self, ri_weather):
+        # Calculate the overall arrest rate
+        print(ri_weather.is_arrested.mean())
+
+        # Calculate the arrest rate for each 'rating'
+        print(ri_weather.groupby('rating').is_arrested.mean())
+
+        # Calculate the arrest rate for each 'violation' and 'rating'
+        print(ri_weather.groupby(['violation', 'rating']).is_arrested.mean())
+
+        # Save the output of the groupby operation from the last exercise
+        arrest_rate = ri_weather.groupby(['violation', 'rating']).is_arrested.mean()
+
+        # Print the 'arrest_rate' Series
+        print(arrest_rate)
+
+        # Print the arrest rate for moving violations in bad weather
+        print(arrest_rate.loc['Moving violation','bad'])
+
+        # Print the arrest rates for speeding violations in all three weather conditions
+        print(arrest_rate.loc['Speeding'])
+
+        # Unstack the 'arrest_rate' Series into a DataFrame
+        print(arrest_rate.unstack)
+
+        # Create the same DataFrame using a pivot table
+        print(ri_weather.pivot_table(index='violation', columns='rating', values='is_arrested'))
+        
 
 
 
@@ -155,6 +288,16 @@ def main():
     chap4 = Analyzing_effect()  
     # chap4.examining_dataset(chap4.weather)
     # chap4.examining_dataset(chap4.weather)
+    # chap4.categorizing_weather(chap4.weather)
+    # chap4.mapping_values(chap4.ri)
+    new_ri = chap4.exercise_1(chap4.ri)
+    new_weather = chap4.counting_values(chap4.weather)
+    ri_weather = chap4.merge_df(new_ri, new_weather)
+
+    chap4.comparing_arrest_rate(ri_weather)
+
+
+
 
 
 
