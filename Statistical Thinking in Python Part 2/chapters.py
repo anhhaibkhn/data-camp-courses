@@ -631,9 +631,73 @@ class Hypothesis(Bootstrap):
         p = np.sum(perm_replicates <= nht_diff_obs) / len(perm_replicates)
         print('p-val =', p)
 
+    
+    def A_B_diff_test_3(self, illiteracy, fertility): 
+        """ Hypothesis test on Pearson correlation """
+        # Compute observed correlation: r_obs
+        r_obs = self.pearson_r(illiteracy, fertility)
 
+        # Initialize permutation replicates: perm_replicates
+        perm_replicates = np.empty(10000)
 
+        # Draw replicates
+        for i in range(10000):
+            # Permute illiteracy measurments: illiteracy_permuted
+            illiteracy_permuted = np.random.permutation(illiteracy)
 
+            # Compute Pearson correlation
+            perm_replicates[i] = self.pearson_r(illiteracy_permuted, fertility)
+
+        # Compute p-value: p
+        p = np.sum(perm_replicates >= r_obs) / len(perm_replicates)
+        print('p-val =', p)
+    
+    def A_B_diff_test_4(self, control, treated):
+        # Compute x,y values for ECDFs
+        x_control, y_control = self.ecdf(control)
+        x_treated, y_treated = self.ecdf(treated)
+
+        # Plot the ECDFs
+        plt.plot(x_control, y_control, marker='.', linestyle='none')
+        plt.plot(x_treated, y_treated, marker='.', linestyle='none')
+
+        # Set the margins
+        plt.margins(0.02)
+
+        # Add a legend
+        plt.legend(('control', 'treated'), loc='lower right')
+
+        # Label axes and show plot
+        plt.xlabel('millions of alive sperm per mL')
+        plt.ylabel('ECDF')
+        plt.show()
+
+    def A_B_diff_test_5(self, control, treated, draw_bs_reps):
+        """ Bootstrap hypothesis test on bee sperm counts """
+        # Compute the difference in mean sperm count: diff_means
+        diff_means = np.mean(control) - np.mean(treated)
+
+        # Compute mean of pooled data: mean_count
+        mean_count = np.mean(np.concatenate((control, treated)))
+
+        # Generate shifted data sets
+        control_shifted = control - np.mean(control) + mean_count
+        treated_shifted = treated - np.mean(treated) + mean_count
+
+        # Generate bootstrap replicates
+        bs_reps_control = draw_bs_reps(control_shifted,
+                            np.mean, size=10000)
+        bs_reps_treated = draw_bs_reps(treated_shifted,
+                            np.mean, size=10000)
+
+        # Get replicates of difference of means: bs_replicates
+        bs_replicates = bs_reps_control - bs_reps_treated
+
+        # Compute and print p-value: p
+        p = np.sum(bs_replicates >= np.mean(control) - np.mean(treated)) \
+                    / len(bs_replicates)
+        print('p-value =', p)
+ 
 
 """ Chapter 5: Putting it all together: a case study
 
@@ -644,6 +708,226 @@ It's an exhilarating way to end the course!
 
 """
 
+
+from IPython.display import display
+class Darwin_finches(Hypothesis):
+    def __init__(self):
+        super().__init__()
+        darwin_data_a = pd.read_csv('finch_beaks_1975.csv',  header=0)
+        darwin_data_b = pd.read_csv('finch_beaks_2012.csv',  header=0)
+
+        print(darwin_data_a.info)
+        print(darwin_data_b.info)
+
+        darwin_data_a.rename({'Beak length, mm': 'blength', 'Beak depth, mm': 'bdepth'}, axis=1, inplace=True)
+
+
+        # initialise data of lists.
+        data_bdepth = {'beak_depth':darwin_data_a.bdepth.to_list() + darwin_data_b.bdepth.to_list(),
+                'year': [1975]*len(darwin_data_a.bdepth.to_list()) + [2012]*len(darwin_data_b.bdepth.to_list()) }
+
+        data_blength = {'beak_length':darwin_data_a.blength.to_list() + darwin_data_b.blength.to_list(),
+                'year': [1975]*len(darwin_data_a.blength.to_list()) + [2012]*len(darwin_data_b.blength.to_list()) }
+ 
+        # Create DataFrame
+        self.df_bdepth = pd.DataFrame(data_bdepth)
+        self.df_blength = pd.DataFrame(data_blength)
+
+        # print(df_bdepth.info(), '\n', df_bdepth.head())
+
+    def create_bee_swarm_plot(self, df):
+        # Create bee swarm plot
+        _ = sns.swarmplot(x = 'year', y = 'beak_depth',data= df)
+
+        # Label the axes
+        _ = plt.xlabel('year')
+        _ = plt.ylabel('beak depth (mm)')
+
+        # Show the plot
+        plt.show()
+
+    def ecdf_of_beak_depths(self, ecdf, bd_1975, bd_2012):
+        """ The differences are much clearer in the ECDF. 
+        The mean is larger in the 2012 data, and the variance does appear larger as well """
+        # Compute ECDFs
+        x_1975, y_1975 = ecdf(bd_1975)
+        x_2012, y_2012 = ecdf(bd_2012)
+
+        # Plot the ECDFs
+        _ = plt.plot(x_1975, y_1975, marker='.', linestyle='none')
+        _ = plt.plot(x_2012, y_2012, marker='.', linestyle='none')
+
+        # Set margins
+        plt.margins(0.02)
+
+        # Add axis labels and legend
+        _ = plt.xlabel('beak depth (mm)')
+        _ = plt.ylabel('ECDF')
+        _ = plt.legend(('1975', '2012'), loc='lower right')
+
+        plt.show()
+
+    def parameter_estimation(self, bd_1975, bd_2012, draw_bs_reps):
+        """ Estimate the difference of the mean beak depth of the G. 
+        scandens samples from 1975 and 2012 and report a 95% confidence interval."""
+        # Compute mean of all beak depths
+        mean_bd = np.mean(bd_1975) + np.mean(bd_2012)
+
+        # Compute the difference of the sample means: mean_diff
+        mean_diff = np.mean(bd_2012) - np.mean(bd_1975)
+
+        # Get bootstrap replicates of means
+        bs_replicates_1975 = draw_bs_reps(bd_1975, np.mean, size=10000)
+        bs_replicates_2012 = draw_bs_reps(bd_2012, np.mean, size=10000)
+
+        # Compute samples of difference of means: bs_diff_replicates
+        bs_diff_replicates = bs_replicates_2012 - bs_replicates_1975
+
+        # Compute 95% confidence interval: conf_int
+        conf_int = np.percentile(bs_diff_replicates, [2.5, 97.5])
+
+        # Print the results
+        print("""
+        Mean of beak depths (1975): {0:.3f} mm
+        Mean of beak depths (2012): {1:.3f} mm
+        Mean difference: {2:.3f} mm
+        95% confidence interval: [{3:.3f}, {4:.3f}] mm""".format(
+            np.mean(bd_1975), np.mean(bd_2012), mean_diff, *conf_int))
+    
+    def hypothesis_test_finches_depth(self, bd_2012, bd_1975, draw_bs_reps):
+        """ Hypothesis test: Are beaks deeper in 2012 ? 
+        We get a p-value of 0.0034, which suggests that there is a statistically significant difference. 
+        But remember: it is very important to know how different they are! In the previous exercise, you got a difference of 0.2 mm between the means. 
+        You should combine this with the statistical significance. Changing by 0.2 mm in 37 years is substantial by evolutionary standards. 
+        If it kept changing at that rate, the beak depth would double in only 400"""
+
+        # Compute the difference of the sample means: mean_diff
+        mean_diff = np.mean(bd_2012) - np.mean(bd_1975)
+
+        # Compute mean of combined data set: combined_mean
+        combined_mean = np.mean(np.concatenate((bd_1975, bd_2012)))
+
+        # Shift the samples
+        bd_1975_shifted = bd_1975 - np.mean(bd_1975) + combined_mean
+        bd_2012_shifted = bd_2012 - np.mean(bd_2012) + combined_mean
+
+        # Get bootstrap replicates of shifted data sets
+        bs_replicates_1975 = draw_bs_reps(bd_1975_shifted, np.mean, 10000)
+        bs_replicates_2012 = draw_bs_reps(bd_2012_shifted, np.mean, 10000)
+
+        # Compute replicates of difference of means: bs_diff_replicates
+        bs_diff_replicates = bs_replicates_2012 - bs_replicates_1975
+
+        # Compute the p-value
+        p = np.sum(bs_diff_replicates >= mean_diff) / len(bs_diff_replicates)
+
+        # Print p-value
+        print('p =', p)
+
+    def EDA_of_beak_length_and_depth(self, bl_1975, bd_1975, bl_2012, bd_2012):
+        # Make scatter plot of 1975 data
+        _ = plt.scatter(bl_1975, bd_1975, marker='.',
+                    linestyle='None', color='blue', alpha=0.5)
+
+        # Make scatter plot of 2012 data
+        _ = plt.scatter(bl_2012, bd_2012, marker='.',
+                    linestyle='None', color='red', alpha=0.5)
+
+        # Label axes and make legend
+        _ = plt.xlabel('beak length (mm)')
+        _ = plt.ylabel('beak depth (mm)')
+        _ = plt.legend(('1975', '2012'), loc='upper left')
+
+        # Show the plot
+        plt.show()
+
+    def Linear_regressions(self, bl_1975, bd_1975, bl_2012, bd_2012, draw_bs_pairs_linreg):
+        """ Perform a linear regression for both the 1975 and 2012 data """
+        # Compute the linear regressions
+        slope_1975, intercept_1975 = np.polyfit(bl_1975, bd_1975, 1)
+        slope_2012, intercept_2012 = np.polyfit(bl_2012, bd_2012, 1)
+
+        # Perform pairs bootstrap for the linear regressions
+        bs_slope_reps_1975, bs_intercept_reps_1975 = \
+                draw_bs_pairs_linreg(bl_1975, bd_1975, 1000)
+        bs_slope_reps_2012, bs_intercept_reps_2012 = \
+                draw_bs_pairs_linreg(bl_2012, bd_2012, 1000)
+
+        # Compute confidence intervals of slopes
+        slope_conf_int_1975 =  np.percentile(bs_slope_reps_1975, [2.5, 97.5])
+        slope_conf_int_2012 = np.percentile(bs_slope_reps_2012, [2.5, 97.5])
+        intercept_conf_int_1975 = np.percentile(bs_intercept_reps_1975, [2.5, 97.5])
+
+        intercept_conf_int_2012 = np.percentile(bs_intercept_reps_2012, [2.5, 97.5])
+
+
+        # Print the results
+        print('1975: slope =', slope_1975,
+            'conf int =', slope_conf_int_1975)
+        print('1975: intercept =', intercept_1975,
+            'conf int =', intercept_conf_int_1975)
+        print('2012: slope =', slope_2012,
+            'conf int =', slope_conf_int_2012)
+        print('2012: intercept =', intercept_2012,
+            'conf int =', intercept_conf_int_2012)
+
+    
+    def Displaying_linear_regression_results (self, bl_1975, bd_1975, bl_2012, bd_2012, bs_slope_reps_1975, bs_intercept_reps_1975, bs_slope_reps_2012, bs_intercept_reps_2012):
+        # Make scatter plot of 1975 data
+        _ = plt.plot(bl_1975, bd_1975, marker='.',
+                    linestyle='none', color='blue', alpha=0.5)
+
+        # Make scatter plot of 2012 data
+        _ = plt.plot(bl_2012, bd_2012, marker='.',
+                    linestyle='none', color='red', alpha=0.5)
+
+        # Label axes and make legend
+        _ = plt.xlabel('beak length (mm)')
+        _ = plt.ylabel('beak depth (mm)')
+        _ = plt.legend(('1975', '2012'), loc='upper left')
+
+        # Generate x-values for bootstrap lines: x
+        x = np.array([10, 17])
+
+        # Plot the bootstrap lines
+        for i in range(100):
+            plt.plot(x, bs_slope_reps_1975[i] * x + bs_intercept_reps_1975[i],
+                    linewidth=0.5, alpha=0.2, color='blue')
+            plt.plot(x, bs_slope_reps_2012[i] * x + bs_intercept_reps_2012[i],
+                    linewidth=0.5, alpha=0.2, color='red')
+
+        # Draw the plot again
+        plt.show()
+
+    def Beak_length_to_depth_ratio(self, bl_1975, bd_1975, bl_2012, bd_2012, draw_bs_reps):
+        # Compute length-to-depth ratios
+        ratio_1975 = np.array(bl_1975/ bd_1975)
+        ratio_2012 = np.array(bl_2012/ bd_2012)
+
+        # Compute means
+        mean_ratio_1975 = np.mean(ratio_1975)
+        mean_ratio_2012 = np.mean(ratio_2012)
+
+        # Generate bootstrap replicates of the means
+        bs_replicates_1975 = draw_bs_reps(ratio_1975, np.mean, 10000)
+        bs_replicates_2012 = draw_bs_reps(ratio_2012, np.mean, 10000)
+
+        # Compute the 99% confidence intervals
+        conf_int_1975 = np.percentile(bs_replicates_1975, [0.5, 99.5])
+        conf_int_2012 = np.percentile(bs_replicates_2012, [0.5, 99.5])
+
+        # Print the results
+        print('1975: mean ratio =', mean_ratio_1975,
+            'conf int =', conf_int_1975)
+        print('2012: mean ratio =', mean_ratio_2012,
+            'conf int =', conf_int_2012)
+
+    
+
+
+
+
+
 def main():
 
     # chap1 = Parameter()  
@@ -652,7 +936,7 @@ def main():
     # chap1.linear_regression(chap1.x, chap1.y)
     # chap1.linear_reg_on_Anscombe(chap1.anscombe_x, chap1.anscombe_y)
 
-    chap3 = Hypothesis()
+    # chap3 = Hypothesis()
     # chap3.make_bee_swarm_plot(chap3.frog_df)
     # chap3.permutation_test_on_frog_data(chap3.force_a, chap3.force_b)
     # chap3.one_sample_bootstrap_hypothesis_test(chap3.force_b)
@@ -666,7 +950,6 @@ def main():
                             1309,  429,   62, 1878, 1104,  123,  251,   93,  188,  983,  166,
                             96,  702,   23,  524,   26,  299,   59,   39,   12,    2,  308,
                             1114,  813,  887])
-
     nht_live = np.array([ 645, 2088,   42, 2090,   11,  886, 1665, 1084, 2900, 2432,  750,
                         4021, 1070, 1765, 1322,   26,  548, 1525,   77, 2181, 2752,  127,
                         2147,  211,   41, 1575,  151,  479,  697,  557, 2267,  542,  392,
@@ -687,7 +970,99 @@ def main():
                         603, 1349,  162, 1027,  783,  326,  101,  876,  381,  905,  156,
                         419,  239,  119,  129,  467])
 
-    chap3.A_B_diff_test_2(nht_dead, nht_live)
+    # chap3.A_B_diff_test_2(nht_dead, nht_live)
+
+    illiteracy = np.array([ 9.5, 49.2,  1. , 11.2,  9.8, 60. , 50.2, 51.2,  0.6,  1. ,  8.5,
+                            6.1,  9.8,  1. , 42.2, 77.2, 18.7, 22.8,  8.5, 43.9,  1. ,  1. ,
+                            1.5, 10.8, 11.9,  3.4,  0.4,  3.1,  6.6, 33.7, 40.4,  2.3, 17.2,
+                            0.7, 36.1,  1. , 33.2, 55.9, 30.8, 87.4, 15.4, 54.6,  5.1,  1.1,
+                            10.2, 19.8,  0. , 40.7, 57.2, 59.9,  3.1, 55.7, 22.8, 10.9, 34.7,
+                            32.2, 43. ,  1.3,  1. ,  0.5, 78.4, 34.2, 84.9, 29.1, 31.3, 18.3,
+                            81.8, 39. , 11.2, 67. ,  4.1,  0.2, 78.1,  1. ,  7.1,  1. , 29. ,
+                            1.1, 11.7, 73.6, 33.9, 14. ,  0.3,  1. ,  0.8, 71.9, 40.1,  1. ,
+                            2.1,  3.8, 16.5,  4.1,  0.5, 44.4, 46.3, 18.7,  6.5, 36.8, 18.6,
+                            11.1, 22.1, 71.1,  1. ,  0. ,  0.9,  0.7, 45.5,  8.4,  0. ,  3.8,
+                            8.5,  2. ,  1. , 58.9,  0.3,  1. , 14. , 47. ,  4.1,  2.2,  7.2,
+                            0.3,  1.5, 50.5,  1.3,  0.6, 19.1,  6.9,  9.2,  2.2,  0.2, 12.3,
+                            4.9,  4.6,  0.3, 16.5, 65.7, 63.5, 16.8,  0.2,  1.8,  9.6, 15.2,
+                            14.4,  3.3, 10.6, 61.3, 10.9, 32.2,  9.3, 11.6, 20.7,  6.5,  6.7,
+                            3.5,  1. ,  1.6, 20.5,  1.5, 16.7,  2. ,  0.9])
+    fertility = np.array([1.769, 2.682, 2.077, 2.132, 1.827, 3.872, 2.288, 5.173, 1.393,
+                        1.262, 2.156, 3.026, 2.033, 1.324, 2.816, 5.211, 2.1  , 1.781,
+                        1.822, 5.908, 1.881, 1.852, 1.39 , 2.281, 2.505, 1.224, 1.361,
+                        1.468, 2.404, 5.52 , 4.058, 2.223, 4.859, 1.267, 2.342, 1.579,
+                        6.254, 2.334, 3.961, 6.505, 2.53 , 2.823, 2.498, 2.248, 2.508,
+                        3.04 , 1.854, 4.22 , 5.1  , 4.967, 1.325, 4.514, 3.173, 2.308,
+                        4.62 , 4.541, 5.637, 1.926, 1.747, 2.294, 5.841, 5.455, 7.069,
+                        2.859, 4.018, 2.513, 5.405, 5.737, 3.363, 4.89 , 1.385, 1.505,
+                        6.081, 1.784, 1.378, 1.45 , 1.841, 1.37 , 2.612, 5.329, 5.33 ,
+                        3.371, 1.281, 1.871, 2.153, 5.378, 4.45 , 1.46 , 1.436, 1.612,
+                        3.19 , 2.752, 3.35 , 4.01 , 4.166, 2.642, 2.977, 3.415, 2.295,
+                        3.019, 2.683, 5.165, 1.849, 1.836, 2.518, 2.43 , 4.528, 1.263,
+                        1.885, 1.943, 1.899, 1.442, 1.953, 4.697, 1.582, 2.025, 1.841,
+                        5.011, 1.212, 1.502, 2.516, 1.367, 2.089, 4.388, 1.854, 1.748,
+                        2.978, 2.152, 2.362, 1.988, 1.426, 3.29 , 3.264, 1.436, 1.393,
+                        2.822, 4.969, 5.659, 3.24 , 1.693, 1.647, 2.36 , 1.792, 3.45 ,
+                        1.516, 2.233, 2.563, 5.283, 3.885, 0.966, 2.373, 2.663, 1.251,
+                        2.052, 3.371, 2.093, 2.   , 3.883, 3.852, 3.718, 1.732, 3.928])
+
+    # chap3.A_B_diff_test_3(illiteracy, fertility)
+
+    bd_1975 = np.array([ 8.4 ,  8.8 ,  8.4 ,  8.  ,  7.9 ,  8.9 ,  8.6 ,  8.5 ,  8.9 ,
+                        9.1 ,  8.6 ,  9.8 ,  8.2 ,  9.  ,  9.7 ,  8.6 ,  8.2 ,  9.  ,
+                        8.4 ,  8.6 ,  8.9 ,  9.1 ,  8.3 ,  8.7 ,  9.6 ,  8.5 ,  9.1 ,
+                        9.  ,  9.2 ,  9.9 ,  8.6 ,  9.2 ,  8.4 ,  8.9 ,  8.5 , 10.4 ,
+                        9.6 ,  9.1 ,  9.3 ,  9.3 ,  8.8 ,  8.3 ,  8.8 ,  9.1 , 10.1 ,
+                        8.9 ,  9.2 ,  8.5 , 10.2 , 10.1 ,  9.2 ,  9.7 ,  9.1 ,  8.5 ,
+                        8.2 ,  9.  ,  9.3 ,  8.  ,  9.1 ,  8.1 ,  8.3 ,  8.7 ,  8.8 ,
+                        8.6 ,  8.7 ,  8.  ,  8.8 ,  9.  ,  9.1 ,  9.74,  9.1 ,  9.8 ,
+                        10.4 ,  8.3 ,  9.44,  9.04,  9.  ,  9.05,  9.65,  9.45,  8.65,
+                        9.45,  9.45,  9.05,  8.75,  9.45,  8.35])
+    bd_2012 = np.array([ 9.4 ,  8.9 ,  9.5 , 11.  ,  8.7 ,  8.4 ,  9.1 ,  8.7 , 10.2 ,
+                        9.6 ,  8.85,  8.8 ,  9.5 ,  9.2 ,  9.  ,  9.8 ,  9.3 ,  9.  ,
+                        10.2 ,  7.7 ,  9.  ,  9.5 ,  9.4 ,  8.  ,  8.9 ,  9.4 ,  9.5 ,
+                        8.  , 10.  ,  8.95,  8.2 ,  8.8 ,  9.2 ,  9.4 ,  9.5 ,  8.1 ,
+                        9.5 ,  8.4 ,  9.3 ,  9.3 ,  9.6 ,  9.2 , 10.  ,  8.9 , 10.5 ,
+                        8.9 ,  8.6 ,  8.8 ,  9.15,  9.5 ,  9.1 , 10.2 ,  8.4 , 10.  ,
+                        10.2 ,  9.3 , 10.8 ,  8.3 ,  7.8 ,  9.8 ,  7.9 ,  8.9 ,  7.7 ,
+                        8.9 ,  9.4 ,  9.4 ,  8.5 ,  8.5 ,  9.6 , 10.2 ,  8.8 ,  9.5 ,
+                        9.3 ,  9.  ,  9.2 ,  8.7 ,  9.  ,  9.1 ,  8.7 ,  9.4 ,  9.8 ,
+                        8.6 , 10.6 ,  9.  ,  9.5 ,  8.1 ,  9.3 ,  9.6 ,  8.5 ,  8.2 ,
+                        8.  ,  9.5 ,  9.7 ,  9.9 ,  9.1 ,  9.5 ,  9.8 ,  8.4 ,  8.3 ,
+                        9.6 ,  9.4 , 10.  ,  8.9 ,  9.1 ,  9.8 ,  9.3 ,  9.9 ,  8.9 ,
+                        8.5 , 10.6 ,  9.3 ,  8.9 ,  8.9 ,  9.7 ,  9.8 , 10.5 ,  8.4 ,
+                        10.  ,  9.  ,  8.7 ,  8.8 ,  8.4 ,  9.3 ,  9.8 ,  8.9 ,  9.8 ,
+                        9.1 ])
+    bl_1975 = np.array([13.9 , 14.  , 12.9 , 13.5 , 12.9 , 14.6 , 13.  , 14.2 , 14.  ,
+            14.2 , 13.1 , 15.1 , 13.5 , 14.4 , 14.9 , 12.9 , 13.  , 14.9 ,
+            14.  , 13.8 , 13.  , 14.75, 13.7 , 13.8 , 14.  , 14.6 , 15.2 ,
+            13.5 , 15.1 , 15.  , 12.8 , 14.9 , 15.3 , 13.4 , 14.2 , 15.1 ,
+            15.1 , 14.  , 13.6 , 14.  , 14.  , 13.9 , 14.  , 14.9 , 15.6 ,
+            13.8 , 14.4 , 12.8 , 14.2 , 13.4 , 14.  , 14.8 , 14.2 , 13.5 ,
+            13.4 , 14.6 , 13.5 , 13.7 , 13.9 , 13.1 , 13.4 , 13.8 , 13.6 ,
+            14.  , 13.5 , 12.8 , 14.  , 13.4 , 14.9 , 15.54, 14.63, 14.73,
+            15.73, 14.83, 15.94, 15.14, 14.23, 14.15, 14.35, 14.95, 13.95,
+            14.05, 14.55, 14.05, 14.45, 15.05, 13.25])
+    bl_2012 = np.array([14.3 , 12.5 , 13.7 , 13.8 , 12.  , 13.  , 13.  , 13.6 , 12.8 ,
+                        13.6 , 12.95, 13.1 , 13.4 , 13.9 , 12.3 , 14.  , 12.5 , 12.3 ,
+                        13.9 , 13.1 , 12.5 , 13.9 , 13.7 , 12.  , 14.4 , 13.5 , 13.8 ,
+                        13.  , 14.9 , 12.5 , 12.3 , 12.8 , 13.4 , 13.8 , 13.5 , 13.5 ,
+                        13.4 , 12.3 , 14.35, 13.2 , 13.8 , 14.6 , 14.3 , 13.8 , 13.6 ,
+                        12.9 , 13.  , 13.5 , 13.2 , 13.7 , 13.1 , 13.2 , 12.6 , 13.  ,
+                        13.9 , 13.2 , 15.  , 13.37, 11.4 , 13.8 , 13.  , 13.  , 13.1 ,
+                        12.8 , 13.3 , 13.5 , 12.4 , 13.1 , 14.  , 13.5 , 11.8 , 13.7 ,
+                        13.2 , 12.2 , 13.  , 13.1 , 14.7 , 13.7 , 13.5 , 13.3 , 14.1 ,
+                        12.5 , 13.7 , 14.6 , 14.1 , 12.9 , 13.9 , 13.4 , 13.  , 12.7 ,
+                        12.1 , 14.  , 14.9 , 13.9 , 12.9 , 14.6 , 14.  , 13.  , 12.7 ,
+                        14.  , 14.1 , 14.1 , 13.  , 13.5 , 13.4 , 13.9 , 13.1 , 12.9 ,
+                        14.  , 14.  , 14.1 , 14.7 , 13.4 , 13.8 , 13.4 , 13.8 , 12.4 ,
+                        14.1 , 12.9 , 13.9 , 14.3 , 13.2 , 14.2 , 13.  , 14.6 , 13.1 , 15.2 ])
+
+
+    chap5 = Darwin_finches()
+    # chap5.create_bee_swarm_plot(chap5.df_bdepth)
+    # chap5.ecdf_of_beak_depths( prep.ecdf ,bd_1975, bd_2012)
+    chap5.EDA_of_beak_length_and_depth(bl_1975, bd_1975, bl_2012, bd_2012)
     
 
 

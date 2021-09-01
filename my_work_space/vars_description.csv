@@ -1,0 +1,15 @@
+Variable,Description
+source_id,publisher unique identifier
+source_name,human-readable publisher name
+author,article author
+title,article headline
+description,article short description
+url, article URL from publisher website
+url_to_image,url to main image associated with the article
+published_at,exact time and date of publishing the article
+content,unformatted content of the article truncated to 260 characters
+top_article,value indicating if article was listed as a top article on publisher website
+engagement_reaction_count,users reactions count for posts on Facebook involving article URL
+engagement_comment_count,users comments count for posts on Facebook involving article URL
+engagement_share_count,users shares count for posts on Facebook involving article URL
+engagement_comment_plugin_count,Users comments count for Facebook comment plugin on article website
